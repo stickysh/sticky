@@ -3,13 +3,12 @@ package administrating
 import (
 	"context"
 	"encoding/json"
-	"log"
 	"net/http"
 	"time"
 
 	"github.com/julienschmidt/httprouter"
 
-	ctrlhttp "github.com/edkvm/ctrl/pkg/http"
+	ctrlhttp "github.com/stickysh/sticky/pkg/http"
 )
 
 func MakeHandler(srv Service) http.Handler {
@@ -45,20 +44,43 @@ func MakeHandler(srv Service) http.Handler {
 		encodeResponse,
 	)
 
+	actionsListHandler := ctrlhttp.NewServer(
+		makeListActionsEndpoint(srv),
+		decodeActionCreateRequest,
+		encodeResponse,
+	)
+
 	actionAddSecretHandler := ctrlhttp.NewServer(
 		makeActionCreateEndpoint(srv),
 		decodeActionName,
 		encodeResponse,
 	)
 
+	createWebhookHandler := ctrlhttp.NewServer(
+		makeCreateWebhookEndpoint(srv),
+		decodeWebhookCreateRequest,
+		encodeResponse,
+	)
+
+	// TODO: Add Auth
 	// Actions
+	r.Handler(http.MethodGet, "/admin/v1/actions", actionsListHandler)
 	r.Handler(http.MethodPost, "/admin/v1/actions", actionCreateHandler)
 	r.Handler(http.MethodPost, "/admin/v1/actions/:name/secrets", actionAddSecretHandler)
+	r.Handler(http.MethodPost, "/admin/v1/actions/:name/schedules", listScheduleHandler)
+
+
+
+	// List details regarding an action
+	r.Handler(http.MethodGet, "/admin/v1/actions/:name", nil)
+
+	// Webhook
+	r.Handler(http.MethodPost, "/admin/v1/webhook", createWebhookHandler)
 
 	// Scheduling
 	r.Handler(http.MethodPost, "/admin/v1/schedule", createScheduleHandler)
 	r.Handler(http.MethodPatch, "/admin/v1/schedule/:id", toggleScheduleHandler)
-	r.Handler(http.MethodGet, "/admin/v1/schedule/:name", listScheduleHandler)
+
 
 	// Stats
 	r.Handler(http.MethodGet, "/admin/v1/stats/:name", listStatsHandler)
@@ -67,7 +89,7 @@ func MakeHandler(srv Service) http.Handler {
 }
 
 func decodeScheduleRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	log.Println("dec")
+
 	var body struct {
 		Action    string `json:"action"`
 		Start     time.Time `json:"start"`
@@ -118,6 +140,22 @@ func decodeActionCreateRequest(ctx context.Context, r *http.Request) (interface{
 
 	return actionCreateReq{
 		Name: body.Name,
+	}, nil
+}
+
+func decodeWebhookCreateRequest(ctx context.Context, r *http.Request) (interface{}, error) {
+	var body struct {
+		Action    string `json:"action"`
+		SignHeaderName string `json:"signHeaderName"`
+
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		return nil, err
+	}
+
+	return webhookCreateRequest{
+		Action: body.Action,
 	}, nil
 }
 

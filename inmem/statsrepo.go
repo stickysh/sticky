@@ -1,7 +1,7 @@
 package inmem
 
 import (
-	"github.com/edkvm/ctrl/action"
+	"github.com/stickysh/sticky/action"
 	"sync"
 )
 

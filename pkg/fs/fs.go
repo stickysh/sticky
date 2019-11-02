@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	_ "github.com/edkvm/ctrl/statik" // Generated FS
+	_ "github.com/stickysh/sticky/statik" // Generated FS
 	statikFS "github.com/rakyll/statik/fs"
 )
 

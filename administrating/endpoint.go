@@ -2,9 +2,9 @@ package administrating
 
 import (
 	"context"
-	"github.com/edkvm/ctrl/action"
-	"github.com/edkvm/ctrl/pkg/endpoint"
-	"github.com/edkvm/ctrl/trigger"
+	"github.com/stickysh/sticky/action"
+	"github.com/stickysh/sticky/pkg/endpoint"
+	"github.com/stickysh/sticky/trigger"
 	"time"
 )
 
@@ -67,6 +67,48 @@ func makeActionCreateEndpoint(s Service) endpoint.Endpoint {
 
 		return nil, nil
 	}
+}
+
+func makeListActionsEndpoint(s Service) endpoint.Endpoint {
+	return func(ctx context.Context, req interface{}) (interface{}, error) {
+		name := req.(string)
+
+		result, err := s.ListSchedule(name)
+		if err != nil {
+			return nil, err
+		}
+
+		list := make([]scheduleResponse, 0, len(result))
+		for _, val := range result {
+			list = append(list, scheduleResponse{
+				string(val.ID),
+				val.Action,
+				val.Start,
+				val.Recurring,
+				val.Interval,
+				val.Enabled,
+			})
+		}
+
+		return listSchedule{Schedules: list}, nil
+	}
+}
+
+type webhookCreateRequest struct {
+	Action string
+}
+
+func makeCreateWebhookEndpoint(s Service) endpoint.Endpoint {
+	return func(ctx context.Context, req interface{}) (interface{}, error) {
+		createReq := req.(webhookCreateRequest)
+		_, err := s.AddWebhook(createReq.Action)
+		if err != nil {
+			return nil, err
+		}
+
+		return nil, nil
+	}
+
 }
 
 type listSchedule struct {

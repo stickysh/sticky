@@ -1,11 +1,11 @@
 package invoking
 
 import (
-	"github.com/edkvm/ctrl/invoke"
+	"github.com/stickysh/sticky/invoke"
 	"time"
 
-	"github.com/edkvm/ctrl/action"
-	"github.com/edkvm/ctrl/trigger"
+	"github.com/stickysh/sticky/action"
+	"github.com/stickysh/sticky/trigger"
 )
 
 type Service interface {
@@ -14,7 +14,7 @@ type Service interface {
 	RemoveActionSchedule(name string, schedID trigger.ScheduleID) error
 
 
-	TriggerActionWithWebhook(name string, params map[string]interface{}) error
+	TriggerActionWithWebhook(action string, webhookID trigger.WebhookID, params map[string]interface{}) error
 
 }
 
@@ -70,7 +70,7 @@ func (s *service) RemoveActionSchedule(name string, schedID trigger.ScheduleID) 
 }
 
 
-func (s *service) TriggerActionWithWebhook(webhookID trigger.WebhookID, params map[string]interface{}) error {
+func (s *service) TriggerActionWithWebhook(action string, webhookID trigger.WebhookID, params map[string]interface{}) error {
 	return nil
 }
 

@@ -2,7 +2,7 @@ package inmem
 
 import (
 	"fmt"
-	"github.com/edkvm/ctrl/trigger"
+	"github.com/stickysh/sticky/trigger"
 	"sync"
 	"time"
 )

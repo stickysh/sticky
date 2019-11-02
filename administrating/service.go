@@ -2,11 +2,11 @@ package administrating
 
 import (
 	"fmt"
-	"github.com/edkvm/ctrl/packing"
+	"github.com/stickysh/sticky/packing"
 	"time"
 
-	"github.com/edkvm/ctrl/action"
-	"github.com/edkvm/ctrl/trigger"
+	"github.com/stickysh/sticky/action"
+	"github.com/stickysh/sticky/trigger"
 )
 
 type EventHandler interface {
@@ -17,6 +17,7 @@ type EventHandler interface {
 type HandlerFunc func (name string, schedID trigger.ScheduleID) error
 
 type Service interface {
+	ListActions() ([]*action.Action, error)
 	CreateAction(name string) error
 	ActionCodeModified(name string) error
 
@@ -34,6 +35,7 @@ type Service interface {
 type service struct {
 	actionRepo   action.ActionRepo
 	schedRepo    trigger.ScheduleRepo
+	webhookRepo  trigger.WebhookRepo
 	statsRepo    action.StatsRepo
 	actionPacker *packing.ActionPack
 	schedHandler EventHandler
@@ -57,9 +59,15 @@ func (s *service) ActionCodeModified(name string) error {
 	return s.actionPacker.Deploy(name)
 }
 
+func (s *service) ListActions() ([]*action.Action, error) {
+	panic("implement me")
+	return nil, nil
+}
 
-func (s *service) AddWebhook(name string) (*trigger.Webhook, error) {
-	panic("not implemented")
+func (s *service) AddWebhook(action string) (*trigger.Webhook, error) {
+	wh := trigger.NewWebhook(action)
+	s.webhookRepo.Store(wh)
+	return nil, nil
 }
 
 

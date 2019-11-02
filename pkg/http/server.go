@@ -3,7 +3,7 @@ package http
 import (
 	"context"
 	"encoding/json"
-	"github.com/edkvm/ctrl/pkg/endpoint"
+	"github.com/stickysh/sticky/pkg/endpoint"
 	"net/http"
 )
 

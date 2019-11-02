@@ -12,15 +12,13 @@ import (
 
 	"net/http"
 
-
-
-	"github.com/edkvm/ctrl"
-	"github.com/edkvm/ctrl/administrating"
-	"github.com/edkvm/ctrl/inmem"
-	"github.com/edkvm/ctrl/invoke"
-	"github.com/edkvm/ctrl/invoking"
-	"github.com/edkvm/ctrl/packing"
-	"github.com/edkvm/ctrl/pkg/gitsrv"
+	"github.com/stickysh/sticky"
+	"github.com/stickysh/sticky/administrating"
+	"github.com/stickysh/sticky/inmem"
+	"github.com/stickysh/sticky/invoke"
+	"github.com/stickysh/sticky/invoking"
+	"github.com/stickysh/sticky/packing"
+	"github.com/stickysh/sticky/pkg/gitsrv"
 
 )
 

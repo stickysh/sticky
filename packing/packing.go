@@ -3,8 +3,8 @@ package packing
 import (
 	"bytes"
 	"fmt"
-	"github.com/edkvm/ctrl"
-	"github.com/edkvm/ctrl/packing/stacks"
+	"github.com/stickysh/sticky"
+	"github.com/stickysh/sticky/packing/stacks"
 	"io"
 	"log"
 	"os"

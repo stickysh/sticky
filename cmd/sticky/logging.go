@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/edkvm/ctrl/pkg/id"
+	"github.com/stickysh/sticky/pkg/id"
 	kitlog "github.com/go-kit/kit/log"
 )
 

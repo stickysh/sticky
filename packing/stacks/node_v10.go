@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"github.com/edkvm/ctrl/pkg/fs"
+	"github.com/stickysh/sticky/pkg/fs"
 	"log"
 	"text/template"
 )

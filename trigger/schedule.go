@@ -3,9 +3,9 @@ package trigger
 import (
 	"time"
 
-	"github.com/edkvm/ctrl/action"
+	"github.com/stickysh/sticky/action"
 
-	ctrlID "github.com/edkvm/ctrl/pkg/id"
+	ctrlID "github.com/stickysh/sticky/pkg/id"
 )
 
 type ScheduleID string

@@ -4,8 +4,8 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"github.com/edkvm/ctrl"
-	"github.com/edkvm/ctrl/action"
+	"github.com/stickysh/sticky"
+	"github.com/stickysh/sticky/action"
 
 	"io/ioutil"
 	"log"
@@ -13,8 +13,8 @@ import (
 	"os"
 	"time"
 
-	ctrlID "github.com/edkvm/ctrl/pkg/id"
-	ctrlFS "github.com/edkvm/ctrl/pkg/fs"
+	ctrlID "github.com/stickysh/sticky/pkg/id"
+	ctrlFS "github.com/stickysh/sticky/pkg/fs"
 )
 
 type ActionProvider struct {

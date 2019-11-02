@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/edkvm/ctrl/trigger"
+	"github.com/stickysh/sticky/trigger"
 )
 
 type ActionTimer struct {

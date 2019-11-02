@@ -2,7 +2,7 @@ package stacks
 
 import (
 	"fmt"
-	"github.com/edkvm/ctrl/pkg/fs"
+	"github.com/stickysh/sticky/pkg/fs"
 	"log"
 	"os"
 	"os/exec"
