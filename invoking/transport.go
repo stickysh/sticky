@@ -12,9 +12,17 @@ import (
 )
 
 
-type invokeRequest map[string]interface{}
+type invokeRequest struct {
+	Action string
+	Params map[string]interface{}
+}
 
-
+type webhookRequest struct {
+	ID string
+	Action string
+	Params map[string]interface{}
+	Headers map[string]string
+}
 
 func MakeHandler(srv Service) http.Handler {
 	r := httprouter.New()
@@ -25,30 +33,29 @@ func MakeHandler(srv Service) http.Handler {
 		encodeInvokeResponse,
 	)
 
-	webhookHandler := ctrlhttp.NewServer(
-		makeWebhookActionEndpoint(srv),
-		decodeInvokeRequest,
-		encodeInvokeResponse,
-	)
-
 	// TODO: Add security token
 	r.Handler(http.MethodPost, "/invoking/v1/actions/:name", invokingHandler)
 
-	r.Handler(http.MethodPost, "/invoking/v1/webhook/:name/:id", webhookHandler)
 
 	return r
 }
 
 
-func decodeInvokeRequest(_ context.Context, r *http.Request) (interface{}, error){
-	var params invokeRequest
+func decodeInvokeRequest(ctx context.Context, r *http.Request) (interface{}, error){
 
-	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
+	var actionParams map[string]interface{}
+
+	params := httprouter.ParamsFromContext(ctx)
+	name := params.ByName("name")
+
+	if err := json.NewDecoder(r.Body).Decode(&actionParams); err != nil {
 		return nil, err
 	}
 
-
-	return params, nil
+	return &invokeRequest{
+		Action: name,
+		Params: actionParams,
+	}, nil
 }
 
 func encodeInvokeResponse(ctx context.Context, w http.ResponseWriter, resp interface{}) error {
@@ -57,11 +64,10 @@ func encodeInvokeResponse(ctx context.Context, w http.ResponseWriter, resp inter
 
 func makeInvokeActionEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, req interface{}) (interface{}, error) {
-		params := httprouter.ParamsFromContext(ctx)
-		name := params.ByName("name")
+
 
 		payload := req.(invokeRequest)
-		result, err := s.RunAction(name, payload)
+		result, err := s.Run(payload.Action, payload.Params)
 		if err != nil {
 
 		}
@@ -69,16 +75,3 @@ func makeInvokeActionEndpoint(s Service) endpoint.Endpoint {
 	}
 }
 
-func makeWebhookActionEndpoint(s Service) endpoint.Endpoint {
-	return func(ctx context.Context, req interface{}) (interface{}, error) {
-		params := httprouter.ParamsFromContext(ctx)
-		name := params.ByName("name")
-
-		payload := req.(invokeRequest)
-		result, err := s.RunAction(name, payload)
-		if err != nil {
-
-		}
-		return result, nil
-	}
-}

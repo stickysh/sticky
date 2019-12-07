@@ -13,9 +13,10 @@ import (
 	"os"
 	"time"
 
-	ctrlID "github.com/stickysh/sticky/pkg/id"
-	ctrlFS "github.com/stickysh/sticky/pkg/fs"
+	stickyID "github.com/stickysh/sticky/pkg/id"
+	stickyFS "github.com/stickysh/sticky/pkg/fs"
 )
+
 
 type ActionProvider struct {
 	sl *ctrl.ServiceLoc
@@ -29,8 +30,8 @@ func NewActionProvider(sl *ctrl.ServiceLoc) *ActionProvider {
 
 func (ap *ActionProvider) BuildAction(name string) (*action.Action, error) {
 	actionPath := ap.sl.ActionPath(name)
-	paramDef := ctrlFS.ReadFile(fmt.Sprintf("%s/params.json", actionPath))
-	configDef := ctrlFS.ReadFile(fmt.Sprintf("%s/config.json", actionPath))
+	paramDef := stickyFS.ReadFile(fmt.Sprintf("%s/params.json", actionPath))
+	configDef := stickyFS.ReadFile(fmt.Sprintf("%s/config.json", actionPath))
 
 	return action.NewAction(paramDef, configDef), nil
 }
@@ -123,18 +124,22 @@ func (ap ActionProvider) InvokeAction(name string, payload []byte, env []string)
 	result, err := pod.executeRPC(pod.sockPath, payload)
 	log.Println("[ctrl]", "finished", "action", name, "result", result)
 
+	if err != nil {
+		log.Print(err)
+	}
+
 	cmd.Process.Kill()
 	if err := cmd.Wait(); err != nil {
 		log.Print(err)
 	}
 
+
 	return result
 
 }
 
-
 func (ap ActionProvider) newExecuter(name string, stack string) *executor {
-	id := ctrlID.GenULID()
+	id := stickyID.GenULID()
 	actionPath := ap.sl.ActionPath(name)
 	return &executor{
 		ID: id,

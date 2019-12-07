@@ -62,8 +62,8 @@ func main() {
 		statsRepo,
 		actionPacker,
 		administrating.NewEventHandler(
-			invkService.AddActionSchedule,
-			invkService.RemoveActionSchedule,
+			invkService.AddSchedule,
+			invkService.RemoveSchedule,
 		),
 	)
 	adminHandler := administrating.MakeHandler(adminService)

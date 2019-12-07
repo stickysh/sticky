@@ -13,7 +13,7 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o ctrlsrv /service/build/cmd/ctrl
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o stickysrv /service/build/cmd/sticky
 
 FROM golang:1.12.11-alpine3.9
 
@@ -26,9 +26,9 @@ RUN mkdir blueprint
 RUN mkdir actions
 RUN mkdir bin
 
-COPY --from=builder /service/build/ctrlsrv /ctrl/bin/
+COPY --from=builder /service/build/stickysrv /sticky/bin/
 
-RUN chmod +x /ctrl/bin/ctrlsrv
+RUN chmod +x /sticky/bin/stickysrv
 
 EXPOSE 6060
 

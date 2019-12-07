@@ -1,6 +1,7 @@
 package invoking
 
 import (
+	"fmt"
 	"github.com/stickysh/sticky/invoke"
 	"time"
 
@@ -8,10 +9,17 @@ import (
 	"github.com/stickysh/sticky/trigger"
 )
 
+type EventAction int
+
+const (
+	EventActionDone = iota
+)
+
 type Service interface {
-	RunAction(name string, params map[string]interface{}) (interface{}, error)
-	AddActionSchedule(name string, schedID trigger.ScheduleID) error
-	RemoveActionSchedule(name string, schedID trigger.ScheduleID) error
+	Run(name string, params map[string]interface{}) (interface{}, error)
+
+	AddSchedule(name string, schedID trigger.ScheduleID) error
+	RemoveSchedule(name string, schedID trigger.ScheduleID) error
 
 
 	TriggerActionWithWebhook(action string, webhookID trigger.WebhookID, params map[string]interface{}) error
@@ -37,30 +45,34 @@ func NewService(actRepo action.ActionRepo, scheduleRepo trigger.ScheduleRepo, st
 }
 
 
-func (s *service) RunAction(name string, params map[string]interface{}) (interface{}, error) {
+func (s *service) Run(name string, params map[string]interface{}) (interface{}, error) {
 	stat := action.NewStat(name, time.Now(), action.Running)
 	defer func(stat *action.Stat){
 		s.statsRepo.Store(stat)
 	}(stat)
+
+	if !s.provider.ActionExists(name) {
+		return nil, fmt.Errorf("action %v does not exists", name)
+	}
 
 	// TODO: Add Error handeling
 	ac, _ := s.provider.BuildAction(name)
 
 	env := ac.BuildEnv()
 	payload := s.provider.EncodePayload(params)
-	result := s.provider.InvokeAction(name, payload, env)
+	result := s.provider.InvokeAction(ac.Name, payload, env)
 
 	return result, nil
 }
 
-func (s *service) AddActionSchedule(name string, schedID trigger.ScheduleID) error {
+func (s *service) AddSchedule(name string, schedID trigger.ScheduleID) error {
 	sched, _ := s.scheduleRepo.Find(schedID)
-	s.actionTimer.AddSchedule(sched, s.RunAction)
+	s.actionTimer.AddSchedule(sched, s.Run)
 
 	return nil
 }
 
-func (s *service) RemoveActionSchedule(name string, schedID trigger.ScheduleID) error {
+func (s *service) RemoveSchedule(name string, schedID trigger.ScheduleID) error {
 	sched, _ := s.scheduleRepo.Find(schedID)
 	if !sched.Enabled {
 		s.actionTimer.RemoveSchedule(sched.ID)

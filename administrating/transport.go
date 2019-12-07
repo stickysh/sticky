@@ -67,15 +67,14 @@ func MakeHandler(srv Service) http.Handler {
 	r.Handler(http.MethodGet, "/admin/v1/actions", actionsListHandler)
 	r.Handler(http.MethodPost, "/admin/v1/actions", actionCreateHandler)
 	r.Handler(http.MethodPost, "/admin/v1/actions/:name/secrets", actionAddSecretHandler)
-	r.Handler(http.MethodPost, "/admin/v1/actions/:name/schedules", listScheduleHandler)
+	r.Handler(http.MethodPost, "/admin/v1/actions/:name/schedule", listScheduleHandler)
 
+	// Webhook
+	r.Handler(http.MethodPost, "/admin/v1/actions/:name/hooks", createWebhookHandler)
 
 
 	// List details regarding an action
 	r.Handler(http.MethodGet, "/admin/v1/actions/:name", nil)
-
-	// Webhook
-	r.Handler(http.MethodPost, "/admin/v1/webhook", createWebhookHandler)
 
 	// Scheduling
 	r.Handler(http.MethodPost, "/admin/v1/schedule", createScheduleHandler)
