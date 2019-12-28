@@ -20,7 +20,7 @@ type ServiceLoc struct {
 
 func NewServeLoc(dir string) *ServiceLoc {
 	if dir == "" {
-		dir = "/usr/local/var/ctrl"
+		dir = "/usr/local/var/sticky"
 	}
 
 	return &ServiceLoc{

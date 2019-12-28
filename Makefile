@@ -1,7 +1,9 @@
 
-all: build
+all: release
 
-build:
+release:
+	@echo ">> building binaries"
 	go get github.com/rakyll/statik
 	statik -src=stacktmpl
-	go build -o ctrl cmd/stickycli/main.go
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o ./stickysrv ./cmd/stickysrv
+

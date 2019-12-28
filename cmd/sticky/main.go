@@ -1,113 +1,120 @@
 package main
 
 import (
-	"context"
-
-	"flag"
 	"fmt"
+	"github.com/edkvm/ctrl"
+	"github.com/edkvm/ctrl/packing"
+	"log"
 	"os"
-	"os/signal"
-	"syscall"
-	"time"
+	"path/filepath"
 
-	"net/http"
 
-	"github.com/stickysh/sticky"
-	"github.com/stickysh/sticky/administrating"
-	"github.com/stickysh/sticky/inmem"
-	"github.com/stickysh/sticky/invoke"
-	"github.com/stickysh/sticky/invoking"
-	"github.com/stickysh/sticky/packing"
-	"github.com/stickysh/sticky/pkg/gitsrv"
-
+	"github.com/urfave/cli"
 )
 
-type ConfigEnv struct {
-	Port int
-	RootDir string
-}
-
-func (c *ConfigEnv) GitDir() string {
-	return fmt.Sprintf("%s/git", c.RootDir)
-}
 
 func main() {
+	//currentPath, err := filepath.Abs(filepath.Dir(os.Args[0]))
 
-	cfg, err := loadConfigEnv()
+	app := cli.NewApp()
+
+	app.Name = "ctrl"
+
+	app.Commands = []cli.Command{
+		{
+			Name: "deploy",
+			Usage: "copy action to the runner, if the action does not exist it will be created",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name: "stack, s",
+					Value: "node10",
+				},
+			},
+			Action: func(c *cli.Context) error {
+				wdPath, err := os.Getwd()
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				if c.NArg() > 0 {
+					pathArg := c.Args().First()
+					wdPath, err = filepath.Abs(pathArg)
+					if err != nil {
+						log.Fatal(err)
+					}
+				}
+
+				log.Println("deploying action from: ", wdPath)
+
+				stackName := c.String("stack")
+				pk, err := packing.BuildPack(stackName, wdPath)
+				if err != nil {
+					return err
+				}
+
+				err = pk.Deploy()
+				if err != nil {
+					log.Println(err)
+				}
+
+				return nil
+			},
+
+		},
+		{
+			Name: "init",
+			Usage: "no usage yet",
+			Action: func(c *cli.Context) error {
+				log.Println("init not implemented")
+				return nil
+			},
+		},
+		{
+			Name: "ls",
+			Usage: "list all the available actions",
+			Action: func(c *cli.Context) error {
+				ar := ctrl.NewActionProvider()
+
+				fmt.Println(ar.List())
+				return nil
+			},
+		},
+		{
+			Name: "run",
+			Usage: "runs the specified function",
+			Action: func(c *cli.Context) error{
+
+				actionName := c.Args().First()
+
+
+				args := c.Args()[1:]
+				ar := ctrl.NewActionProvider()
+
+				if !ar.ActionExists(actionName) {
+					log.Fatal(fmt.Sprintf("action does not exists: %s", actionName))
+				}
+
+				fr := ctrl.NewAction(actionName)
+
+				log.Println("running action:", actionName)
+				log.Println("params:", args)
+				// Parse params
+				params := fr.ParamsToJSON([]string(args))
+
+				payload, env := fr.EncodePayload(params)
+				result := ar.ExecuteAction(actionName, payload, env)
+
+
+				log.Println(result)
+
+				return nil
+			},
+		},
+	}
+
+	err := app.Run(os.Args)
 	if err != nil {
-
+		log.Fatal(err)
 	}
-
-	logger := NewLogger()
-
-
-	serviceLoc := ctrl.NewServeLoc(cfg.RootDir)
-	mux := http.NewServeMux()
-
-
-
-	actionRepo := inmem.NewActionRepo()
-	schedRepo := inmem.NewScheduleRepo()
-	statsRepo := inmem.NewStatsRepo()
-	actionTimer := invoke.NewActionTimer()
-	actionProvider := invoke.NewActionProvider(serviceLoc)
-	invkService := invoking.NewService(actionRepo, schedRepo, statsRepo, actionTimer, actionProvider)
-	invokeHandler := invoking.MakeHandler(invkService)
-	mux.Handle("/invoking/v1/", invokeHandler)
-
-	actionPacker := packing.NewActionPack(serviceLoc)
-	adminService := administrating.NewService(
-		actionRepo,
-		schedRepo,
-		statsRepo,
-		actionPacker,
-		administrating.NewEventHandler(
-			invkService.AddSchedule,
-			invkService.RemoveSchedule,
-		),
-	)
-	adminHandler := administrating.MakeHandler(adminService)
-	mux.Handle("/admin/v1/", adminHandler)
-
-
-	// Expose git endpoints
-	mux.Handle("/git/", gitsrv.GitServer(cfg.GitDir(), "/git/", gitsrv.NewEventHadler(adminService.ActionCodeModified)))
-
-	logger.Log("level", "info", "msg", fmt.Sprintf("staring on port %v", cfg.Port))
-
-	srv := &http.Server{
-		Handler:      NewLoggerMiddelware(logger, mux),
-		Addr:         fmt.Sprintf(":%v", cfg.Port),
-		ReadTimeout:  60 * time.Second,
-		WriteTimeout: 60 * time.Second,
-	}
-
-	go func() {
-		if err := srv.ListenAndServe(); err != nil {
-			logger.Log("level", "error", "msg", err)
-		}
-	}()
-
-	term := make(chan os.Signal, 1)
-	signal.Notify(term, os.Interrupt, syscall.SIGTERM)
-
-	<- term
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5 * time.Second)
-	defer cancel()
-	if err := srv.Shutdown(ctx); err != nil {
-		os.Exit(1)
-		return
-	}
-	os.Exit(0)
 }
 
-func loadConfigEnv() (*ConfigEnv,error) {
-	cfg := &ConfigEnv{}
-
-	flag.IntVar(&cfg.Port,"port",6060,"specify the port, defaults to 6060")
-	flag.StringVar(&cfg.RootDir, "dir", "/usr/local/var/ctrl", "specify a directory for the service")
-	flag.Parse()
-
-	return cfg, nil
-}
